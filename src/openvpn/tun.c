@@ -1647,16 +1647,16 @@ set_vpnc_vars(struct env_set *es, struct tuntap *tt)
     setenv_str(es, "INTERNAL_IP4_ADDRESS", print_in_addr_t(tt->local, 0, &gc));
     setenv_int(es, "INTERNAL_IP4_MTU", tt->mtu);
 
-    if (tt->ipv6 && tt->did_ifconfig_ipv6_setup)
+    if (tt->did_ifconfig_ipv6_setup)
     {
         const char *ifconfig_ipv6_local = print_in6_addr(tt->local_ipv6, 0, &gc);
         struct buffer out6 = alloc_buf_gc(64, &gc);
 
         buf_printf(&out6, "%s/%d", ifconfig_ipv6_local, tt->netbits_ipv6);
-        setenv_str(es, "INTERNAL_IP6_NETMASK", buf_bptr(&out6));
+        setenv_str(es, "INTERNAL_IP6_NETMASK", BSTR(&out6));
     }
 
-    gc_free (&gc);
+    gc_free(&gc);
 }
 
 static void
