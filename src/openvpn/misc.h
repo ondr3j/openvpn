@@ -52,8 +52,10 @@ struct env_set {
 };
 
 /* system flags */
-#define S_SCRIPT (1<<0)
-#define S_FATAL  (1<<1)
+#define S_SCRIPT  (1<<0)
+#define S_FATAL   (1<<1)
+#define S_NOWAIT  (1<<2)
+#define S_SETPGRP (1<<3)
 
 const char *system_error_message(int, struct gc_arena *gc);
 

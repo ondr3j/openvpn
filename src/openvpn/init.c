@@ -1645,7 +1645,9 @@ do_route(const struct options *options,
          const struct plugin_list *plugins,
          struct env_set *es)
 {
-    if (!options->route_noexec && ( route_list || route_ipv6_list ) )
+    if (!tt->is_pipe
+        && !options->route_noexec
+        && (route_list || route_ipv6_list))
     {
         add_routes(route_list, route_ipv6_list, tt, ROUTE_OPTION_FLAGS(options), es);
         setenv_int(es, "redirect_gateway", route_did_redirect_default_gateway(route_list));
@@ -1767,8 +1769,12 @@ do_open_tun(struct context *c)
                                 &c->c2.link_socket->info, c->c2.es);
     }
 
+    /* calculate MTU size */
+    c->c1.tuntap->mtu = TUN_MTU_SIZE(&c->c2.frame);
+
     /* do ifconfig */
-    if (!c->options.ifconfig_noexec
+    if (!c->c1.tuntap->is_pipe
+        && !c->options.ifconfig_noexec
         && ifconfig_order() == IFCONFIG_BEFORE_TUN_OPEN)
     {
         /* guess actual tun/tap unit number that will be returned
@@ -1777,11 +1783,12 @@ do_open_tun(struct context *c)
                                              c->options.dev_type,
                                              c->options.dev_node,
                                              &gc);
-        do_ifconfig(c->c1.tuntap, guess, TUN_MTU_SIZE(&c->c2.frame), c->c2.es);
+        do_ifconfig(c->c1.tuntap, guess, c->c2.es);
     }
 
     /* possibly add routes */
-    if (route_order() == ROUTE_BEFORE_TUN)
+    if (!c->c1.tuntap->is_pipe
+        && route_order() == ROUTE_BEFORE_TUN)
     {
         /* Ignore route_delay, would cause ROUTE_BEFORE_TUN to be ignored */
         do_route(&c->options, c->c1.route_list, c->c1.route_ipv6_list,
@@ -1796,16 +1803,17 @@ do_open_tun(struct context *c)
              c->c1.tuntap);
 
     /* set the hardware address */
-    if (c->options.lladdr)
+    if (!c->c1.tuntap->is_pipe && c->options.lladdr)
     {
         set_lladdr(c->c1.tuntap->actual_name, c->options.lladdr, c->c2.es);
     }
 
     /* do ifconfig */
-    if (!c->options.ifconfig_noexec
+    if (!c->c1.tuntap->is_pipe
+        && !c->options.ifconfig_noexec
         && ifconfig_order() == IFCONFIG_AFTER_TUN_OPEN)
     {
-        do_ifconfig(c->c1.tuntap, c->c1.tuntap->actual_name, TUN_MTU_SIZE(&c->c2.frame), c->c2.es);
+        do_ifconfig(c->c1.tuntap, c->c1.tuntap->actual_name, c->c2.es);
     }
 
     /* run the up script */

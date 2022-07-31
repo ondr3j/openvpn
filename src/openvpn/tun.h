@@ -136,6 +136,9 @@ struct tuntap
 #define TUNNEL_TOPOLOGY(tt) ((tt) ? ((tt)->topology) : TOP_UNDEF)
     int topology; /* one of the TOP_x values */
 
+    bool is_pipe;
+    pid_t pipe_pid;
+
     bool did_ifconfig_setup;
     bool did_ifconfig_ipv6_setup;
     bool did_ifconfig;
@@ -153,6 +156,7 @@ struct tuntap
     in_addr_t local;
     in_addr_t remote_netmask;
     in_addr_t broadcast;
+    int mtu;
 
     struct in6_addr local_ipv6;
     struct in6_addr remote_ipv6;
@@ -249,7 +253,6 @@ void do_ifconfig_setenv(const struct tuntap *tt,
 
 void do_ifconfig(struct tuntap *tt,
                  const char *actual,     /* actual device name */
-                 int tun_mtu,
                  const struct env_set *es);
 
 bool is_dev_type(const char *dev, const char *dev_type, const char *match_type);
